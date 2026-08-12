@@ -1,0 +1,22 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+#
+# This is a plain static site: no build step, no dependencies, nothing to
+# install. Render just serves the files in ./public.
+services:
+  - type: web
+    name: ez-qr-code
+    runtime: static
+    buildCommand: ""
+    staticPublishPath: ./public
+    # Long-lived caching for the assets, but never for the HTML itself, so a
+    # redeploy is picked up immediately.
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: no-referrer
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache
