@@ -1,9 +1,16 @@
 # EZ QR Code
 
-Paste a URL, set the colors with a hex code, download a QR code as PNG or SVG.
+Set the colors with a hex code, download a QR code as PNG or SVG.
 
 No build step, no dependencies, no server, no tracking. The QR code is encoded
 in the browser, so nothing you type ever leaves your machine.
+
+## Pages
+
+| Path | What it does |
+| --- | --- |
+| `/` | Encodes a URL or any text. |
+| `/wifi` | Encodes Wi-Fi credentials so guests can scan to join the network. |
 
 ## Features
 
@@ -46,12 +53,33 @@ Every push to `main` redeploys automatically.
 
 ```
 public/
-  index.html   markup
-  styles.css   styling, light and dark
-  app.js       UI wiring: inputs, preview, downloads
-  qr.js        the QR encoder (no dependencies)
-render.yaml    Render blueprint
+  index.html      the Link page
+  link.js         its inputs (URL field, bare-domain hint)
+  wifi/
+    index.html    the Wi-Fi page
+    wifi.js       its inputs and WIFI: payload builder
+  qr-ui.js        everything the pages share: colors, presets, error
+                  correction, sizing, preview, contrast checks, exports
+  qr.js           the QR encoder (no dependencies)
+  styles.css      styling, light and dark
+render.yaml       Render blueprint
 ```
+
+Adding another code type means writing a page with its own input fields plus a
+`getPayload()`, then handing it to `QRUI.mount()` — see the top of
+[`public/qr-ui.js`](public/qr-ui.js).
+
+## About the Wi-Fi payload
+
+Wi-Fi codes use the `WIFI:` scheme that iOS and Android cameras understand:
+
+```
+WIFI:T:WPA;S:My Network;P:secret;;
+```
+
+The characters `\ ; , : "` are escaped automatically, which matters more than it
+sounds — an unescaped semicolon in a password silently truncates the rest of the
+payload, producing a code that scans but won't connect.
 
 ## About the encoder
 
@@ -64,7 +92,8 @@ It was verified end-to-end against the platform barcode decoder
 (`BarcodeDetector`): all 160 combinations of version 1–40 and error correction
 level L/M/Q/H were generated at exact capacity, rendered, and decoded back to
 the original input, along with the colored, inverted, transparent, and
-unicode rendering paths.
+unicode rendering paths. The Wi-Fi payloads are checked the same way, including
+passwords containing every character that needs escaping.
 
 ## License
 

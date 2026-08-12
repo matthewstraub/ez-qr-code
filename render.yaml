@@ -20,3 +20,6 @@ services:
       - path: /index.html
         name: Cache-Control
         value: no-cache
+      - path: /wifi/index.html
+        name: Cache-Control
+        value: no-cache

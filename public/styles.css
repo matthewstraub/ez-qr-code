@@ -80,9 +80,38 @@ body {
 }
 
 .tagline {
-  margin: 0 0 28px;
+  margin: 0 0 18px;
   max-width: 62ch;
   color: var(--text-muted);
+}
+
+/* ------------------------------ Page tabs ------------------------------ */
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 24px;
+}
+
+.tabs a {
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.tabs a:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.tabs a[aria-current="page"] {
+  background: var(--bg-elevated);
+  border-color: var(--border-strong);
+  color: var(--text);
 }
 
 /* ------------------------------ Layout ------------------------------ */
@@ -151,7 +180,8 @@ label,
 }
 
 textarea,
-input[type="text"] {
+input[type="text"],
+input[type="password"] {
   width: 100%;
   padding: 11px 12px;
   background: var(--bg-input);
@@ -181,6 +211,40 @@ summary:focus-visible {
   justify-content: space-between;
   align-items: baseline;
   gap: 12px;
+}
+
+.label-row {
+  margin-top: 18px;
+}
+
+.label-row label {
+  margin-bottom: 0;
+}
+
+.label {
+  display: block;
+}
+
+.label.spaced {
+  margin-top: 20px;
+}
+
+.link-btn {
+  padding: 0;
+  background: none;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+.link-btn[disabled] {
+  color: var(--text-faint);
+  text-decoration: none;
 }
 
 .hint {
@@ -376,6 +440,36 @@ button {
   color: var(--accent-contrast);
 }
 
+/* The Wi-Fi security options need room for words, not single letters. */
+.segmented-wide {
+  grid-template-columns: 1.6fr 1fr 1fr;
+}
+
+.segmented-wide button {
+  font-size: 12.5px;
+  padding: 9px 4px;
+}
+
+/* ------------------------------ Payload readout ------------------------------ */
+
+.payload {
+  margin-top: 18px;
+}
+
+.payload code {
+  display: block;
+  margin-top: 6px;
+  padding: 9px 11px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
 .advanced summary {
   font-size: 13px;
   font-weight: 600;
@@ -505,6 +599,11 @@ canvas {
 }
 
 button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+input:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

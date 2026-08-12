@@ -26,11 +26,14 @@
           Paste a link, pick your colors, download the code. Everything runs in
           your browser — nothing is uploaded.
         </p>
+        <nav class="tabs" aria-label="QR code type">
+          <a href="/" aria-current="page">Link</a>
+          <a href="/wifi/">Wi-Fi</a>
+        </nav>
       </header>
 
       <main class="layout">
-        <!-- ------------------------------ Controls ------------------------------ -->
-        <section class="panel controls" aria-label="QR code settings">
+        <section class="panel controls" id="qr-controls" aria-label="QR code settings">
           <div class="field">
             <label for="content">URL or text</label>
             <textarea
@@ -49,146 +52,10 @@
               Add https:// for me
             </button>
           </div>
-
-          <div class="field">
-            <span class="label">Colors</span>
-            <div class="color-grid">
-              <div class="color-field">
-                <span class="sub-label" id="fg-label">Foreground</span>
-                <div class="color-input">
-                  <input
-                    type="color"
-                    id="fg-picker"
-                    value="#0f1115"
-                    aria-label="Pick foreground color"
-                  />
-                  <input
-                    type="text"
-                    id="fg-hex"
-                    class="hex"
-                    value="#0f1115"
-                    spellcheck="false"
-                    autocapitalize="off"
-                    autocorrect="off"
-                    aria-labelledby="fg-label"
-                    aria-describedby="fg-error"
-                  />
-                </div>
-                <p class="error hidden" id="fg-error"></p>
-              </div>
-
-              <div class="color-field">
-                <span class="sub-label" id="bg-label">Background</span>
-                <div class="color-input">
-                  <input
-                    type="color"
-                    id="bg-picker"
-                    value="#ffffff"
-                    aria-label="Pick background color"
-                  />
-                  <input
-                    type="text"
-                    id="bg-hex"
-                    class="hex"
-                    value="#ffffff"
-                    spellcheck="false"
-                    autocapitalize="off"
-                    autocorrect="off"
-                    aria-labelledby="bg-label"
-                    aria-describedby="bg-error"
-                  />
-                </div>
-                <p class="error hidden" id="bg-error"></p>
-              </div>
-            </div>
-
-            <label class="checkbox">
-              <input type="checkbox" id="transparent" />
-              <span>Transparent background</span>
-            </label>
-
-            <div class="presets" id="presets" role="group" aria-label="Color presets"></div>
-
-            <button type="button" class="ghost-btn" id="swap">
-              Swap foreground and background
-            </button>
-
-            <p class="notice hidden" id="contrast-notice" role="status"></p>
-          </div>
-
-          <div class="field">
-            <span class="label" id="ecl-label">Error correction</span>
-            <div class="segmented" role="radiogroup" aria-labelledby="ecl-label" id="ecl">
-              <button type="button" role="radio" data-ecl="L" aria-checked="false">L</button>
-              <button type="button" role="radio" data-ecl="M" aria-checked="true" class="active">M</button>
-              <button type="button" role="radio" data-ecl="Q" aria-checked="false">Q</button>
-              <button type="button" role="radio" data-ecl="H" aria-checked="false">H</button>
-            </div>
-            <p class="hint">
-              Higher levels survive more damage (a logo, a scuff, a bad print)
-              but pack the code more densely. M is a good default.
-            </p>
-          </div>
-
-          <details class="field advanced">
-            <summary>Size &amp; spacing</summary>
-            <div class="slider-field">
-              <label for="size">
-                Export size <output id="size-out">1024</output> px
-              </label>
-              <input
-                type="range"
-                id="size"
-                min="128"
-                max="2048"
-                step="32"
-                value="1024"
-              />
-            </div>
-            <div class="slider-field">
-              <label for="margin">
-                Quiet zone <output id="margin-out">4</output> modules
-              </label>
-              <input type="range" id="margin" min="0" max="12" step="1" value="4" />
-            </div>
-            <p class="hint">
-              The quiet zone is the blank border around the code. The spec asks
-              for at least 4 modules; going below that can stop scanners from
-              finding the code.
-            </p>
-          </details>
+          <!-- Colors, error correction and sizing are injected here by qr-ui.js -->
         </section>
 
-        <!-- ------------------------------ Preview ------------------------------ -->
-        <section class="panel preview" aria-label="QR code preview">
-          <div class="canvas-wrap" id="canvas-wrap">
-            <canvas id="canvas" width="512" height="512" role="img" aria-label="QR code preview"></canvas>
-          </div>
-
-          <p class="error-box hidden" id="encode-error" role="alert"></p>
-
-          <dl class="meta" id="meta">
-            <div><dt>Version</dt><dd id="meta-version">—</dd></div>
-            <div><dt>Modules</dt><dd id="meta-modules">—</dd></div>
-            <div><dt>Level</dt><dd id="meta-ecl">—</dd></div>
-          </dl>
-
-          <div class="actions">
-            <button type="button" id="download-png" class="primary-btn">
-              Download PNG
-            </button>
-            <button type="button" id="download-svg" class="secondary-btn">
-              Download SVG
-            </button>
-            <button type="button" id="copy" class="secondary-btn">
-              Copy image
-            </button>
-          </div>
-          <p class="hint center" id="action-status" role="status"></p>
-          <p class="hint center">
-            Scan the preview with your phone before you print or publish it.
-          </p>
-        </section>
+        <section class="panel preview" id="qr-preview" aria-label="QR code preview"></section>
       </main>
 
       <footer class="footer">
@@ -200,6 +67,7 @@
     </div>
 
     <script src="qr.js"></script>
-    <script src="app.js"></script>
+    <script src="qr-ui.js"></script>
+    <script src="link.js"></script>
   </body>
 </html>
