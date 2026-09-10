@@ -8,8 +8,9 @@ services:
     runtime: static
     buildCommand: ""
     staticPublishPath: ./public
-    # Long-lived caching for the assets, but never for the HTML itself, so a
-    # redeploy is picked up immediately.
+    # Never cache the HTML, so a redeploy is picked up immediately. Nothing
+    # here is content-hashed, so the JS and CSS are left on Render's default
+    # of `public, max-age=0, s-maxage=300`, which revalidates.
     headers:
       - path: /*
         name: X-Content-Type-Options
@@ -17,7 +18,20 @@ services:
       - path: /*
         name: Referrer-Policy
         value: no-referrer
+      # Every directory needs both its bare and its index.html form. Render
+      # matches these rules against the *request* path, not the file it
+      # resolves to, so a rule for /index.html alone does nothing for
+      # visitors — who request "/" and get Render's default instead.
+      - path: /
+        name: Cache-Control
+        value: no-cache
       - path: /index.html
+        name: Cache-Control
+        value: no-cache
+      - path: /wifi
+        name: Cache-Control
+        value: no-cache
+      - path: /wifi/
         name: Cache-Control
         value: no-cache
       - path: /wifi/index.html
