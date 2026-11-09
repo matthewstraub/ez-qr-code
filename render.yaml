@@ -37,3 +37,12 @@ services:
       - path: /wifi/index.html
         name: Cache-Control
         value: no-cache
+      - path: /verify
+        name: Cache-Control
+        value: no-cache
+      - path: /verify/
+        name: Cache-Control
+        value: no-cache
+      - path: /verify/index.html
+        name: Cache-Control
+        value: no-cache

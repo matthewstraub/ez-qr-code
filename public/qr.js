@@ -496,5 +496,20 @@ const QR = (function () {
     return dataCodewords(40, ecl) - 3; // minus mode + 16-bit count overhead
   }
 
-  return { encode, maxBytes };
+  return {
+    encode,
+    maxBytes,
+    /**
+     * Spec tables and geometry shared with the decoder in qr-decode.js, so
+     * there is only ever one copy of them to get wrong.
+     */
+    spec: {
+      eccCodewordsPerBlock: ECC_CODEWORDS_PER_BLOCK,
+      numEccBlocks: NUM_ECC_BLOCKS,
+      formatBits: FORMAT_BITS,
+      rawDataModules,
+      dataCodewords,
+      alignmentPatternPositions,
+    },
+  };
 })();

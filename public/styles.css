@@ -608,6 +608,197 @@ input:disabled {
   cursor: not-allowed;
 }
 
+/* ------------------------------ Scanner ------------------------------ */
+
+.app-narrow {
+  max-width: 560px;
+}
+
+.app-narrow .panel + .panel {
+  margin-top: 16px;
+}
+
+.scanner {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.scanner video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+
+.scanner.live video {
+  display: block;
+}
+
+/* Corner brackets, to show roughly where to aim. */
+.scanner-frame {
+  position: absolute;
+  inset: 16%;
+  border-radius: 10px;
+  display: none;
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.28);
+}
+
+.scanner.live .scanner-frame {
+  display: block;
+}
+
+.scanner-frame::before,
+.scanner-frame::after {
+  content: "";
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border: 3px solid #ffffff;
+}
+
+.scanner-frame::before {
+  top: -2px;
+  left: -2px;
+  border-right: none;
+  border-bottom: none;
+  border-radius: 10px 0 0 0;
+}
+
+.scanner-frame::after {
+  bottom: -2px;
+  right: -2px;
+  border-left: none;
+  border-top: none;
+  border-radius: 0 0 10px 0;
+}
+
+.scanner-idle {
+  margin: 0;
+  padding: 0 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+.scan-actions,
+.result-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.file-btn {
+  display: block;
+  margin: 0;
+  text-align: center;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+/* ------------------------------ Scan result ------------------------------ */
+
+.result-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 11px;
+  background: var(--accent);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--accent-contrast);
+}
+
+.details {
+  margin: 0 0 16px;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.details div {
+  display: grid;
+  gap: 2px;
+}
+
+.details dt {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+
+.details dd {
+  margin: 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.details dd.strong {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.secret {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  margin-right: 10px;
+  overflow-wrap: anywhere;
+}
+
+.field-block {
+  margin-bottom: 16px;
+}
+
+.payload-raw {
+  display: block;
+  margin-top: 6px;
+  padding: 10px 12px;
+  max-height: 160px;
+  overflow: auto;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.warnings .notice {
+  margin: 0 0 10px;
+}
+
+a.secondary-btn {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  color: var(--text);
+}
+
+/* Opening a link we have just flagged should not look like the obvious move. */
+a.secondary-btn.risky {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
 /* ------------------------------ Footer ------------------------------ */
 
 .footer {

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Verify a QR Code — EZ QR Code</title>
+    <meta
+      name="description"
+      content="Scan a QR code with your camera to see exactly what it contains, without opening it. Checks links for misleading addresses. Nothing is uploaded."
+    />
+    <meta name="color-scheme" content="dark light" />
+    <link rel="stylesheet" href="../styles.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230f1115'/%3E%3Cpath fill='%23fff' d='M2 2h4v4H2zM10 2h4v4h-4zM2 10h4v4H2zM7 2h1v1H7zM7 4h1v3H7zM2 7h3v1H2zM8 8h1v1H8zM10 7h1v1h-1zM12 8h2v1h-2zM7 12h1v2H7zM9 10h1v4H9zM11 11h3v1h-3zM12 13h2v1h-2z'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <div class="app app-narrow">
+      <header class="masthead">
+        <h1>
+          <span class="mark" aria-hidden="true"></span>
+          EZ QR Code
+        </h1>
+        <p class="tagline">
+          Point your camera at a QR code to read what's actually inside it. The
+          code is never opened or followed — you just get to see it first.
+        </p>
+        <nav class="tabs" aria-label="QR code type">
+          <a href="/">Link</a>
+          <a href="/wifi/">Wi-Fi</a>
+          <a href="/verify/" aria-current="page">Verify</a>
+        </nav>
+      </header>
+
+      <main>
+        <section class="panel" aria-label="Scanner">
+          <div class="scanner" id="scanner">
+            <video id="video" playsinline muted autoplay></video>
+            <div class="scanner-frame" aria-hidden="true"></div>
+            <p class="scanner-idle" id="scanner-idle">
+              The camera preview appears here.
+            </p>
+          </div>
+
+          <div class="scan-actions">
+            <button type="button" class="primary-btn" id="start">
+              Start camera
+            </button>
+            <button type="button" class="secondary-btn hidden" id="stop">
+              Stop camera
+            </button>
+            <label class="secondary-btn file-btn" for="file">
+              Use a photo or screenshot
+              <input type="file" id="file" accept="image/*" hidden />
+            </label>
+          </div>
+
+          <p class="hint center" id="scan-status" role="status">
+            Works offline. Nothing you scan leaves your device.
+          </p>
+          <p class="error-box hidden" id="scan-error" role="alert"></p>
+        </section>
+
+        <section class="panel result hidden" id="result" aria-label="Scan result" tabindex="-1">
+          <div class="result-head">
+            <span class="badge" id="result-type">Link</span>
+            <button type="button" class="link-btn" id="scan-again">Scan another</button>
+          </div>
+
+          <dl class="details" id="details"></dl>
+
+          <div class="field-block">
+            <span class="sub-label">Exactly what the code contains</span>
+            <code class="payload-raw" id="raw"></code>
+          </div>
+
+          <div class="warnings" id="warnings"></div>
+
+          <div class="result-actions">
+            <button type="button" class="secondary-btn" id="copy">Copy value</button>
+            <a class="secondary-btn hidden" id="open" target="_blank" rel="noopener noreferrer nofollow">Open link</a>
+          </div>
+          <p class="hint center" id="copy-status" role="status"></p>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <p>
+          Scanning happens entirely in your browser. No image, link or password
+          is ever sent anywhere.
+        </p>
+      </footer>
+    </div>
+
+    <script src="../qr.js"></script>
+    <script src="../qr-decode.js"></script>
+    <script src="verify.js"></script>
+  </body>
+</html>
