@@ -10,6 +10,23 @@
 (function () {
   "use strict";
 
+  /**
+   * The deployed redirect resolver, from worker/README.md. Leave it empty and
+   * the page never offers to resolve anything and contacts nothing; set it and
+   * a "Resolve redirects" button appears on web links.
+   *
+   * Resolving is always a deliberate tap. Doing it automatically would mean
+   * quietly sending every code you scan to a server, which is the opposite of
+   * what this page is for.
+   */
+  const RESOLVER_ENDPOINT = "";
+
+  // Served from localhost with nothing deployed yet, fall back to the mock in
+  // worker/mock-resolver.py so the feature can be tried before it is live.
+  const LOCAL_RESOLVER = "http://localhost:8766";
+  const onLocalhost = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
+  const resolver = RESOLVER_ENDPOINT || (onLocalhost ? LOCAL_RESOLVER : "");
+
   const $ = (id) => document.getElementById(id);
   const el = {
     scanner: $("scanner"),
@@ -26,6 +43,11 @@
     raw: $("raw"),
     warnings: $("warnings"),
     copy: $("copy"),
+    resolve: $("resolve"),
+    chain: $("chain"),
+    copyCurl: $("copy-curl"),
+    curlHint: $("curl-hint"),
+    curlCommand: $("curl-command"),
     open: $("open"),
     copyStatus: $("copy-status"),
     scanAgain: $("scan-again"),
@@ -41,6 +63,7 @@
   let scanning = false;
   let nativeDetector = null;
   let nativeBroken = false;
+  let pendingCurl = null; // the command for the result on screen, if any
 
   // ------------------------------ Decoding ------------------------------
 
@@ -283,6 +306,178 @@
     return { type: "Plain text", details: [], warnings: [] };
   }
 
+  // ------------------------------ curl command ------------------------------
+
+  /**
+   * Wrap a value so a POSIX shell passes it through as one literal argument.
+   *
+   * This is not decoration. The text comes off a QR code somebody else
+   * printed, and the result is meant to be pasted into a terminal, so a value
+   * containing a quote could otherwise end the quoting and have whatever
+   * follows run as a command. Single-quoting everything and escaping the
+   * quotes themselves leaves no way out of the string.
+   */
+  function shellQuote(value) {
+    return "'" + String(value).replace(/'/g, "'\\''") + "'";
+  }
+
+  /**
+   * A command that follows the whole redirect chain and prints each hop plus
+   * the address it finally lands on. A shortened link does not reveal its
+   * destination to the scanner, and a page served from the browser cannot
+   * chase it either: shorteners send no CORS headers, so a cross-origin fetch
+   * cannot read where it was redirected to. Handing over the command keeps
+   * the work — and the request — on the reader's own machine.
+   */
+  function curlCommand(url) {
+    return (
+      "curl -sSL -A 'Mozilla/5.0' -D - -o /dev/null " +
+      "-w '\\nfinal: %{url_effective}\\n' " +
+      shellQuote(url) +
+      " | grep -iE '^(HTTP/|location:|final:)'"
+    );
+  }
+
+  // ------------------------------ Redirect chain ------------------------------
+
+  /** One row of the chain: an arrow, the status it returned, and the address. */
+  function chainRow(status, url, note) {
+    const row = document.createElement("div");
+    row.className = "chain-row";
+
+    const arrow = document.createElement("span");
+    arrow.className = "chain-arrow";
+    arrow.textContent = "→";
+    row.appendChild(arrow);
+
+    const code = document.createElement("span");
+    code.className = "chain-status";
+    if (status === null) code.classList.add("chain-status-bad");
+    else if (status >= 400) code.classList.add("chain-status-bad");
+    else if (status >= 300) code.classList.add("chain-status-hop");
+    code.textContent = status === null ? "×" : String(status);
+    row.appendChild(code);
+
+    if (url) {
+      const address = document.createElement("span");
+      address.className = "chain-url";
+      // textContent, never innerHTML: this string came off a stranger's code.
+      address.textContent = url;
+      if (/^http:\/\//i.test(url)) address.classList.add("chain-insecure");
+      row.appendChild(address);
+    }
+
+    if (note) {
+      const flag = document.createElement("span");
+      flag.className = "chain-note";
+      flag.textContent = note;
+      row.appendChild(flag);
+    }
+    return row;
+  }
+
+  function renderChain(data) {
+    el.chain.textContent = "";
+    const hops = data.hops || [];
+    if (!hops.length) return;
+
+    const list = document.createElement("div");
+    list.className = "chain-list";
+
+    // The address we started from, then one row per redirect, pairing each
+    // status with the address it sent us to — the shape of a curl trace.
+    const start = document.createElement("div");
+    start.className = "chain-row chain-first";
+    const startUrl = document.createElement("span");
+    startUrl.className = "chain-url";
+    startUrl.textContent = hops[0].url;
+    if (/^http:\/\//i.test(hops[0].url)) startUrl.classList.add("chain-insecure");
+    start.appendChild(startUrl);
+    list.appendChild(start);
+
+    for (let i = 1; i < hops.length; i++) {
+      const note = /^http:\/\//i.test(hops[i].url) ? "not encrypted" : "";
+      list.appendChild(chainRow(hops[i - 1].status, hops[i].url, note));
+      if (hops[i].error) {
+        list.appendChild(chainRow(null, "", hops[i].error));
+      }
+    }
+
+    // The status the final address answered with, on its own line.
+    const last = hops[hops.length - 1];
+    if (!last.error) list.appendChild(chainRow(last.status, "", ""));
+
+    el.chain.appendChild(list);
+
+    const hopCount = hops.length - 1;
+    const summary = document.createElement("p");
+    summary.className = "hint";
+    summary.textContent =
+      (hopCount === 0
+        ? "No redirects — the code points straight here."
+        : hopCount + (hopCount === 1 ? " redirect." : " redirects.")) +
+      (data.truncated ? " The chain was longer than this and was cut short." : "") +
+      " Only the address was sent to your resolver; nothing else left this device.";
+    el.chain.appendChild(summary);
+
+    // The destination deserves the same scrutiny as the address on the code.
+    // A tidy-looking shortener can land somewhere that fails every check.
+    const destination = describeUrl(data.final);
+    if (destination) {
+      if (destination.details[0]) {
+        const goes = document.createElement("p");
+        goes.className = "chain-destination";
+        goes.textContent = "Ends up at " + destination.details[0].value;
+        el.chain.appendChild(goes);
+      }
+      for (const warning of destination.warnings) {
+        const p = document.createElement("p");
+        p.className = "notice " + (warning.level === "bad" ? "bad" : "warn");
+        p.textContent = warning.text;
+        el.chain.appendChild(p);
+      }
+    }
+
+    el.chain.classList.remove("hidden");
+  }
+
+  function chainError(message) {
+    el.chain.textContent = "";
+    const p = document.createElement("p");
+    p.className = "notice bad";
+    p.textContent = message;
+    el.chain.appendChild(p);
+    el.chain.classList.remove("hidden");
+  }
+
+  async function resolveRedirects(url) {
+    el.resolve.disabled = true;
+    el.resolve.textContent = "Resolving…";
+    el.chain.classList.add("hidden");
+
+    try {
+      const response = await fetch(
+        resolver + "?url=" + encodeURIComponent(url),
+        { method: "GET", signal: AbortSignal.timeout(12000) }
+      );
+      const data = await response.json();
+      if (!data.ok) {
+        chainError(data.error || "The chain could not be followed.");
+      } else {
+        renderChain(data);
+      }
+    } catch (err) {
+      chainError(
+        err && err.name === "TimeoutError"
+          ? "The resolver took too long to answer."
+          : "Could not reach the resolver. You can still copy the curl command below."
+      );
+    }
+
+    el.resolve.disabled = false;
+    el.resolve.textContent = "Resolve again";
+  }
+
   // ------------------------------ Result rendering ------------------------------
 
   function renderResult(text) {
@@ -346,6 +541,33 @@
     } else {
       el.open.removeAttribute("href");
       el.open.classList.add("hidden");
+    }
+
+    // Offered for every web address, not just the shorteners we recognise:
+    // plenty of ordinary-looking links redirect somewhere else entirely, and a
+    // vanity path on a well known domain will never appear on a block list.
+    if (info.openable) {
+      pendingCurl = curlCommand(info.openable);
+      el.copyCurl.classList.remove("hidden");
+      el.curlHint.classList.remove("hidden");
+    } else {
+      pendingCurl = null;
+      el.copyCurl.classList.add("hidden");
+      el.curlHint.classList.add("hidden");
+    }
+    // Anything left over from the previous scan would be actively misleading.
+    el.curlCommand.classList.add("hidden");
+    el.curlCommand.textContent = "";
+    el.chain.classList.add("hidden");
+    el.chain.textContent = "";
+
+    // Only offered once a resolver has been configured; see RESOLVER_ENDPOINT.
+    if (info.openable && resolver) {
+      el.resolve.disabled = false;
+      el.resolve.textContent = "Resolve redirects";
+      el.resolve.classList.remove("hidden");
+    } else {
+      el.resolve.classList.add("hidden");
     }
 
     el.result.classList.remove("hidden");
@@ -563,18 +785,45 @@
     startCamera();
   });
 
-  el.copy.addEventListener("click", async () => {
-    const text = el.raw.textContent;
+  let copyStatusTimer = null;
+
+  async function copyToClipboard(text, done, failed) {
     try {
       await navigator.clipboard.writeText(text);
-      el.copyStatus.textContent = "Copied.";
+      el.copyStatus.textContent = done;
     } catch (err) {
-      el.copyStatus.textContent = "Could not copy — select the text above instead.";
+      el.copyStatus.textContent = failed;
     }
-    clearTimeout(el.copy.timer);
-    el.copy.timer = setTimeout(() => {
+    clearTimeout(copyStatusTimer);
+    copyStatusTimer = setTimeout(() => {
       el.copyStatus.textContent = "";
-    }, 3000);
+    }, 4000);
+  }
+
+  el.copy.addEventListener("click", () =>
+    copyToClipboard(
+      el.raw.textContent,
+      "Copied.",
+      "Could not copy — select the text above instead."
+    )
+  );
+
+  el.resolve.addEventListener("click", () => {
+    const url = el.open.getAttribute("href");
+    if (url) resolveRedirects(url);
+  });
+
+  el.copyCurl.addEventListener("click", () => {
+    if (!pendingCurl) return;
+    // Show it as well as copy it. This page exists so people can see what
+    // they are about to act on, and a command is no exception.
+    el.curlCommand.textContent = pendingCurl;
+    el.curlCommand.classList.remove("hidden");
+    copyToClipboard(
+      pendingCurl,
+      "Command copied. Paste it into a terminal.",
+      "Could not copy — select the command below instead."
+    );
   });
 
   // Don't hold the camera open in a background tab.

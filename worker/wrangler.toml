@@ -1,0 +1,6 @@
+name = "ez-qr-resolve"
+main = "resolve.js"
+compatibility_date = "2026-01-01"
+
+# No KV, no secrets, no bindings. The worker takes a URL, follows its
+# redirects and reports the hops; there is nothing to store.

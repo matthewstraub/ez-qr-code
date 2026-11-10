@@ -67,6 +67,9 @@ public/
   qr.js           the QR encoder (no dependencies)
   qr-decode.js    the QR reader (no dependencies)
   styles.css      styling, light and dark
+worker/
+  resolve.js      Cloudflare Worker that follows a link's redirects
+  mock-resolver.py  local stand-in for it, for development
 render.yaml       Render blueprint
 ```
 
@@ -123,10 +126,38 @@ the error-correction limit — then cross-checked against the platform decoder o
 separately: 330 correctable cases repaired exactly, and 300 beyond-limit cases
 refused rather than silently returning wrong data.
 
+### Following a shortened link
+
+A shortener tells the scanner nothing about where it ends up, and the page
+cannot chase it: browsers hide cross-origin redirect targets on purpose, so a
+`no-cors` fetch returns an opaque response with status 0, an empty URL and no
+headers, and `redirect: "manual"` throws. That is a security boundary, not an
+oversight — being able to read them would reveal which sites you are signed
+into.
+
+So the chain is followed by a small Cloudflare Worker instead, and the page
+shows the result the way a curl trace looks:
+
+```
+https://qrco.de/bh5Bqe
+  → 302  http://amazon.com/LEGOHoliday        not encrypted
+  → 301  https://amazon.com/LEGOHoliday
+  → 301  https://www.amazon.com/LEGOHoliday
+  → 301  https://www.amazon.com/stores/page/91C58ED9-…
+  → 200
+```
+
+The destination then gets the same checks as the address on the code, because
+a tidy-looking shortener can land somewhere that fails all of them. Setup and
+the guards on that endpoint are in [`worker/README.md`](worker/README.md);
+with no worker configured the button simply does not appear.
+
 ### What the Verify page will not do
 
 It never acts on what it reads. No link is followed, no network joined, nothing
-fetched. The value is decoded on the device and shown as text, and opening it
+fetched. Resolving redirects is the one thing that contacts anything, and it
+takes a deliberate tap — doing it automatically would mean quietly sending
+every code you scan to a server. The value is decoded on the device and shown as text, and opening it
 is left to a deliberate tap. It also points out the things worth noticing
 before that tap: an address whose real destination differs from what it appears
 to say, `http://` rather than `https://`, a shortened link whose endpoint the

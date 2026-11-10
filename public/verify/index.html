@@ -77,10 +77,24 @@
 
           <div class="warnings" id="warnings"></div>
 
+          <div class="chain hidden" id="chain" aria-live="polite"></div>
+
           <div class="result-actions">
+            <button type="button" class="primary-btn hidden" id="resolve">
+              Resolve redirects
+            </button>
             <button type="button" class="secondary-btn" id="copy">Copy value</button>
+            <button type="button" class="secondary-btn hidden" id="copy-curl">
+              Copy as curl
+            </button>
             <a class="secondary-btn hidden" id="open" target="_blank" rel="noopener noreferrer nofollow">Open link</a>
           </div>
+          <p class="hint center hidden" id="curl-hint">
+            Paste the curl command into a terminal to follow every redirect and
+            see where the link really ends up. It runs on your machine — this
+            page still contacts nothing.
+          </p>
+          <code class="payload-raw hidden" id="curl-command"></code>
           <p class="hint center" id="copy-status" role="status"></p>
         </section>
       </main>
