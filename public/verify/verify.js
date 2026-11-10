@@ -19,7 +19,7 @@
    * quietly sending every code you scan to a server, which is the opposite of
    * what this page is for.
    */
-  const RESOLVER_ENDPOINT = "";
+  const RESOLVER_ENDPOINT = "https://ez-qr-resolve.matt-straub.workers.dev";
 
   // Served from localhost with nothing deployed yet, fall back to the mock in
   // worker/mock-resolver.py so the feature can be tried before it is live.

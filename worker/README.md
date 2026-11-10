@@ -21,12 +21,25 @@ to get an answer while standing in a shop.
 There is no build step and no dependencies, so the dashboard route works and
 needs no Node on your machine:
 
-1. Cloudflare dashboard → **Workers & Pages** → **Create** → **Create Worker**
-2. Name it `ez-qr-resolve`, deploy the placeholder, then **Edit code**
-3. Replace the contents with [`resolve.js`](resolve.js) and **Deploy**
-4. Copy the worker URL (`https://ez-qr-resolve.<your-subdomain>.workers.dev`)
-5. Paste it into `RESOLVER_ENDPOINT` at the top of
+1. Cloudflare dashboard → **Workers & Pages** → **Create application**
+2. Under "Make something new", choose **Start with Hello World!** — that is the
+   plain-worker path. The other options connect a repository or upload static
+   files, neither of which applies to a single file with no build step.
+3. Name it `ez-qr-resolve` and deploy the placeholder
+4. Open the worker and **Edit code**, replace everything with
+   [`resolve.js`](resolve.js), and **Deploy**
+5. The URL is `https://ez-qr-resolve.<your-subdomain>.workers.dev`, where the
+   subdomain is the one shown under Account details in the dashboard
+6. Paste that into `RESOLVER_ENDPOINT` at the top of
    [`../public/verify/verify.js`](../public/verify/verify.js)
+
+The Hello World template is already a module worker (`export default { fetch }`),
+which is the shape `resolve.js` expects, so pasting over it needs no other
+change.
+
+Cloudflare's dashboard is renamed fairly often. If none of the labels match,
+look for whichever option creates a worker from scratch rather than from a
+repository or a template.
 
 With Node available, `npx wrangler deploy` from this directory does the same
 thing using [`wrangler.toml`](wrangler.toml).
